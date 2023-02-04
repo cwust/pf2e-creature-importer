@@ -142,6 +142,17 @@ export type ActionActivity = {
     textarea_attr_description: string;
 }
 
+export type CreatureIndexData = {
+    label: string;
+    path: string;
+}
 
+export type PackIndexData = {
+    label: string;
+    itens: CreatureIndexData[];
+}
+
+
+export type PacksTree = {[packName: string]: PackIndexData};
 
 

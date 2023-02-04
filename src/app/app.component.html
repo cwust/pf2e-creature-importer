@@ -1,7 +1,7 @@
+<input type="text" pInputText style="width: 420px;" placeholder="Search creature by name" [(ngModel)]="filter" (ngModelChange)="filterChanged($event)" />
 <p-tree
   scrollHeight="200px"
   [value]="nodes" [loading]="loading"
-  (onNodeExpand)="nodeExpand($event)"
   selectionMode="single" [(selection)]="selectedNode" 
   (onNodeSelect)="nodeSelect($event)" (onNodeUnselect)="nodeUnselect($event)">
 

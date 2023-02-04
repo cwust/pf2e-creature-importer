@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "PF2e Creature Importer",
-  "version": "0.1",
+  "version": "0.2",
   "description": "Imports Creatures from 'Pathfinder Second Edition Game System for FoundryVTT' into Roll20",
   "browser_action": {
     "default_title": "Import creature",
