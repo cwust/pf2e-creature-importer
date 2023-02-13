@@ -11614,7 +11614,7 @@ class FoundryToRoll20Service {
       containerSelector: 'div.npc-melee-strikes',
       items: items.map(it => ({
         attr_weapon: it.name,
-        attr_weapon_strike: it.system.bonus.value,
+        attr_weapon_strike: this.modifierText(it.system.bonus.value),
         attr_weapon_traits: this.join(it.system.traits.value),
         checkbox_1_attr_weapon_agile: (it.system.traits.value || []).indexOf('agile') >= 0 ? '1' : null,
         attr_weapon_strike_damage: this.getDamageRoll(it).damage,
@@ -11634,7 +11634,7 @@ class FoundryToRoll20Service {
       containerSelector: 'div.npc-ranged-strikes',
       items: items.map(it => ({
         attr_weapon: it.name,
-        attr_weapon_strike: it.system.bonus.value,
+        attr_weapon_strike: this.modifierText(it.system.bonus.value),
         attr_weapon_traits: this.join(it.system.traits.value),
         checkbox_1_attr_weapon_agile: (it.system.traits.value || []).indexOf('agile') >= 0 ? '1' : null,
         attr_weapon_strike_damage: this.getDamageRoll(it).damage,
@@ -11716,7 +11716,7 @@ class FoundryToRoll20Service {
     if (!description || !description.replaceAll) {
       return description;
     }
-    return description.replaceAll(/<p>|<\/p>|<hr \/>|<strong>|<ul>|<\/ul>|<\/li>|<em>|<\/em>/g, '').replaceAll('</strong>', ':').replaceAll('<li>', '- ').replaceAll(/@Check\[type:(.*)\|(dc:\d+).*\]/g, '$1 saving throw, $2').replaceAll(/@\w*\[.*\]\{(.*)\}/g, '"$1"').replaceAll(/\[\[\/\w+\s*[^\[\]]*(?:\[[^\]]*\])?\]\]\{([^\}]*)\}/g, "$1").replaceAll(/\[\[\/r\s*([^\[\]]*)(?:\[([^\]]*)\])?\]\]/g, "$1 $2").replaceAll(/@\w*\[.*\]/g, '');
+    return description.replaceAll(/<p>|<\/p>|<hr \/>|<strong>|<ul>|<\/ul>|<\/li>|<em>|<\/em>/g, '').replaceAll('</strong>', ':').replaceAll('<li>', '- ').replaceAll(/@Check\[type:(.*)\|(dc:\d+).*\]/g, '$1 saving throw, $2').replaceAll(/@\w*\[[^\}]*\]\{([^\}]*)\}/g, '$1').replaceAll(/\[\[\/\w+\s*[^\[\]]*(?:\[[^\]]*\])?\]\]\{([^\}]*)\}/g, "$1").replaceAll(/\[\[\/r\s*([^\[\]]*)(?:\[([^\]]*)\])?\]\]/g, "$1 $2").replaceAll(/@\w*\[.*\]/g, '');
   }
 }
 FoundryToRoll20Service.ɵfac = function FoundryToRoll20Service_Factory(t) {

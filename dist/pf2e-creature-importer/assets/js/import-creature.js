@@ -114,7 +114,7 @@
 
     const Roll20Page = {
         intervalBetweenAttemps: 200,
-        maxAttemps: 50,
+        maxAttemps: 48,
         click: async function (selector, insideIFrame) {
             const event = new MouseEvent('click', {
                 view: window,
@@ -156,8 +156,12 @@
                 resolve(result[0]);
             }
         },
-        waitForElementVisible: async function (selector, insideIFrame) {
-            return new Promise((resolve, reject) => this._waitForElementVisible(selector, insideIFrame, 0, resolve, reject));
+        waitForElementVisible: async function (selector, insideIFrame, fewerRetries) {
+            return new Promise((resolve, reject) => this._waitForElementVisible(
+                selector, 
+                insideIFrame, 
+                fewerRetries ? (this.maxAttemps / 4) * 3: 0, 
+                resolve, reject));
         },
         _waitForElementVisible: function (selector, insideIFrame, numberOfAttemps, resolve, reject) {
             if (numberOfAttemps > this.maxAttemps) {
@@ -177,6 +181,13 @@
             } else {
                 resolve();
             }
+        },
+        isElementVisible: async function (selector, insideIFrame) {
+            return new Promise((resolve, reject) => {
+                this.waitForElementVisible(selector, insideIFrame, true)
+                .then(() => resolve(true))
+                .catch(() => resolve(false));
+            });
         },
         openJournal: async function () {
             await this.click('a[href="#journal"]');
@@ -223,9 +234,11 @@
             await sleep(100);
             await this.click('div.npc-melee-strikes .repcontrol_edit', true);
             await sleep(100);
-            await this.click('div.npc-melee-strikes .repcontainer .repitem:nth-child(1) .repcontrol_del', true);
-            await sleep(100);
-            await this.click('div.npc-melee-strikes .repcontrol_edit', true); 0
+            if (await this.isElementVisible('div.npc-melee-strikes .repcontainer .repitem:nth-child(1) .repcontrol_del', true)) {
+                await this.click('div.npc-melee-strikes .repcontainer .repitem:nth-child(1) .repcontrol_del', true);
+                await sleep(100);
+            }
+            await this.click('div.npc-melee-strikes .repcontrol_edit', true);
         },
         fillField: async function (container, attr, value) {
             if (value === null || value === undefined) {
