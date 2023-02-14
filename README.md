@@ -39,5 +39,3 @@ As this project is still in its initial phase, there are a LOT of things not wor
 
 - Keep selected creature when closing/opening the add-on
 - Import spells
-- Cache modules and creatures
-- Add search button
