@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ActionActivity, FreeActionReaction, InteractionAbility, ItemWorn, Lore, MeleeStrike, RangedStrike, RepeatingSection, Roll20NpcSheet } from './types';
+import { ActionActivity, FreeActionReaction, InteractionAbility, ItemWorn, Lore, MeleeStrike, RangedStrike, RepeatingSection, Roll20NpcSheet, Spell, SpellsInfo } from './types';
 
 @Injectable({
   providedIn: 'root'
@@ -9,7 +9,7 @@ export class FoundryToRoll20Service {
   constructor() { }
 
   convertFoundrySheetToRoll20(from: any): Roll20NpcSheet {
-    return {
+    const roll20Sheet = {
       attr_character_name: from.name,
       attr_npc_type: from.system.details.creatureType,
       attr_level: from.system.details.level.value,
@@ -78,9 +78,12 @@ export class FoundryToRoll20Service {
       repeating_free_actions_reactions: this.extractFreeActionsReactions(from),
       repeating_melee_strikes: this.extractMeleeStrikes(from),
       repeating_ranged_strikes: this.extractRangedStrikes(from),
-      repeating_actions_activities: this.extractActionsActivities(from)
-
+      repeating_actions_activities: this.extractActionsActivities(from),
+      spells: this.extractSpells(from)
     }
+
+    console.log('Roll20 Sheet data', roll20Sheet);
+    return roll20Sheet;
   }
 
   private extractSkill(from: any, skillName: string): string | null {
@@ -232,7 +235,7 @@ export class FoundryToRoll20Service {
       return null;
     }
 
-    let arrStr : string[];
+    let arrStr: string[];
     if (extractor) {
       arrStr = arr.map(it => extractor(it));
     } else {
@@ -293,5 +296,117 @@ export class FoundryToRoll20Service {
       .replaceAll(/\[\[\/\w+\s*[^\[\]]*(?:\[[^\]]*\])?\]\]\{([^\}]*)\}/g, "$1")
       .replaceAll(/\[\[\/r\s*([^\[\]]*)(?:\[([^\]]*)\])?\]\]/g, "$1 $2")
       .replaceAll(/@\w*\[.*\]/g, '')
+  }
+
+  private extractSpells(from: any): SpellsInfo | null {
+    const spellcastingEntries: any[] = from.items.filter((item: any) => item.type == 'spellcastingEntry');
+    if (!spellcastingEntries.length) {
+      return null;
+    }
+    const spells: SpellsInfo = {};
+
+    spellcastingEntries.forEach(sce => this.processSpellcastingEntry(sce, spells));
+
+    from.items
+      .filter((item: any) => item.type == 'spell')
+      .forEach((item: any) => {
+        const spell: Spell = {
+          attr_name: item.name,
+          attr_spelllevel: item.system.level.value,
+          attr_traits: this.join(item.system.traits.value),
+          attr_domain: null,
+          select_attr_school: item.system.school.value,
+          attr_cast: this.parseSpellComponents(item.system.components),
+          select_attr_cast_detail_label: null,
+          attr_cast_detail_information: null,
+          attr_range: item.system.range.value,
+          attr_target: item.system.target.value,
+          attr_area: item.system.area ? (`${item.system.area.type} ${item.system.area.value}`) : null,
+          attr_duration: item.system.duration.value,
+          select_attr_frequency: null,
+          attr_spellattack_custom: null,
+          attr_spellattack_misc: null,
+          attr_spellattack_other: null,
+          attr_damage_dice: item.system.damage && item.system.damage.value && item.system.damage.value['0'] ? item.system.damage.value['0'].value : '',
+          select_attr_damage_ability: null,
+          attr_damage_misc: null,
+          attr_damage_other: null,
+          attr_damage_type: item.system.damage && item.system.damage.value && item.system.damage.value['0'] ? item.system.damage.value['0'].type.value : '',
+          attr_damage_additional: null,
+          select_attr_npc_saving_throw_select: !item.system.save.value ? '' : (item.system.basic ? '@{npc_save_roll_basic}' : '@{npc_save_roll}'),
+          select_attr_save_type: item.system.save.value,
+          attr_spelldc: null,
+          attr_spelldc_misc: null,
+          textarea_attr_save_critical_success: null,
+          textarea_attr_save_success: null,
+          textarea_attr_save_failure: null,
+          textarea_attr_save_critical_failure: null,
+          textarea_attr_description: this.parseDescription(item.system.description.value),
+          textarea_attr_heightened: null
+        };
+
+        let repeating_section;
+        if (item.system.traits.value.indexOf('cantrip') >= 0) {
+          if (!spells.repeating_cantrips) {
+            spells.repeating_cantrips = {
+              containerSelector: 'div.spells div.cantrips',
+              items: []
+            }
+          }
+          repeating_section = spells.repeating_cantrips;
+        } else if (item.system.category == 'focus') {
+          if (!spells.repeating_focus) {
+            spells.repeating_focus = {
+              containerSelector: 'div.spells div.focus',
+              items: []
+            }
+          }
+          repeating_section = spells.repeating_focus;
+        } else if (item.system.location && item.system.location.value && item.system.location.value == spells.spellcastingEntryInnateId) {
+          repeating_section = spells.repeating_innate;
+        } else {
+          repeating_section = spells.repeating_normalspells || spells.repeating_innate;
+        }
+
+        if (!repeating_section) {
+          console.error('Error processing spells');
+        } else {
+          repeating_section.items.push(spell);
+        }
+      });
+    return spells;
+  }
+
+  private processSpellcastingEntry(spellcastingEntry: any, spells: SpellsInfo): void {
+    spells.attr_spell_attack = spellcastingEntry.system.spelldc.value;
+    spells.attr_spell_dc = spellcastingEntry.system.spelldc.dc;
+
+    const prepared = spellcastingEntry.system.prepared.value;
+    if (prepared == 'prepared') {
+      spells.checkbox_prepared_attr_spellcaster_prepared = 'prepared';
+      spells.spellcastingEntryPreparedId = spellcastingEntry._id;
+      spells.repeating_normalspells = {
+        containerSelector: 'div.spells div.normalspells',
+        items: []
+      }
+    }
+
+    if (prepared == 'innate') {
+      spells.checkbox_spontaneous_attr_spellcaster_spontaneous = 'spontaneous';
+      spells.spellcastingEntryInnateId = spellcastingEntry._id;
+      spells.repeating_innate = {
+        containerSelector: 'div.spells div.innate',
+        items: []
+      }
+    }
+
+    if (spellcastingEntry.system.autoHeightenLevel && spellcastingEntry.system.autoHeightenLevel.value) {
+      spells.attr_cantrips_per_day = spellcastingEntry.system.autoHeightenLevel.value;
+    }
+  }
+
+  private parseSpellComponents(components: any): string {
+    const comps = ['focus', 'material', 'somatic', 'verbal'];
+    return comps.filter(c => components[c]).join(', ');
   }
 }

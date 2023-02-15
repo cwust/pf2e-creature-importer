@@ -62,7 +62,6 @@ export class AppComponent implements OnInit {
   }
 
   nodeSelect(event: any) {
-    console.log('select', event, this.selectedNode);
     if (this.previousSelectedNode) {
       this.previousSelectedNode.data.selected = false;
     }

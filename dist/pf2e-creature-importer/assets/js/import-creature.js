@@ -230,6 +230,9 @@
         clickNpcSettingsButton: async function () {
             return this.click('div.npc button.pictos[name=act_toggle_npcsettings]', true);
         },
+        clickSpellcasterOption: async function () {
+            return this.click('div.npc div.npc-general-options button[name=act_toggle_npcspellcaster]', true);
+        },
         deletePlaceholderStrike: async function() {
             await sleep(100);
             await this.click('div.npc-melee-strikes .repcontrol_edit', true);
@@ -259,6 +262,8 @@
                 let selector;
                 if (attr.indexOf('textarea_') == 0) {
                     selector = container + ' textarea[name=' + attr.substring('textarea_)'.length - 1) + ']';
+                } else if (attr.indexOf('select_') == 0) {
+                    selector = container + ' select[name=' + attr.substring('select_)'.length - 1) + ']';
                 } else {
                     selector = container + ' input[name=' + attr + ']:not([type=hidden])';
                 }
@@ -267,7 +272,6 @@
             }
         },
         copyRepeatingItems: async function (repeatingSection) {
-            console.log('copyRepeatingItems', repeatingSection);
             if (!repeatingSection || !repeatingSection.items) {
                 return;
             };
@@ -310,17 +314,44 @@
             await this.clickNpcSettingsButton();
             await this.waitForNpcSettingsVisible();
 
-            await sleep(3000);
+            await sleep(2000);
 
             await this.deletePlaceholderStrike();
 
             for (let attr in roll20Sheet) {
-                if (attr == 'attr_hit_points') {
+                if (attr == 'attr_hit_points' || attr == 'spells') {
                     continue;
                 } else if (attr.startsWith('repeating')) {
                     await this.copyRepeatingItems(roll20Sheet[attr]);
                 } else {
                     await this.fillField('div.npc-settings', attr, roll20Sheet[attr]);
+                }
+            }
+
+            if (roll20Sheet.spells) {
+                await this.clickSpellcasterOption();
+                await sleep(200);
+                for (let attr in roll20Sheet.spells) {
+                    if (attr.startsWith('spellcastingEntry')) {
+                        continue;
+                    } else if (attr.startsWith('repeating')) {
+                        await this.copyRepeatingItems(roll20Sheet.spells[attr]);
+                    } else {
+                        await this.fillField('div.spells', attr, roll20Sheet.spells[attr]);
+                    }
+                }
+
+                if (!roll20Sheet.spells.repeating_innate) {
+                    this.click('div.spellsectiontoggles input[name=attr_toggle_innate]', true);
+                }
+                if (!roll20Sheet.spells.repeating_focus) {
+                    this.click('div.spellsectiontoggles input[name=attr_toggle_focus]', true);
+                }
+                if (!roll20Sheet.spells.repeating_cantrips) {
+                    this.click('div.spellsectiontoggles input[name=attr_toggle_cantrips]', true);
+                }
+                if (!roll20Sheet.spells.repeating_normalspells) {
+                    this.click('div.spellsectiontoggles input[name=attr_toggle_normalspells]', true);
                 }
             }
             await this.clickNpcSettingsButton();
@@ -336,7 +367,7 @@
                 alert('Please close all Character Sheets before importing your creature.');
             }
         } catch (err) {
-            console.log('err', err);
+            console.log('Error: ', err);
             alert('Error importing creature!');
         }
     }

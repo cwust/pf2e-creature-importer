@@ -81,6 +81,7 @@ export type Roll20NpcSheet = {
     repeating_ranged_strikes: RepeatingSection<RangedStrike> | null;
 
     repeating_actions_activities: RepeatingSection<ActionActivity> | null;
+    spells: SpellsInfo | null;
 }
 
 export type Lore = {
@@ -142,10 +143,61 @@ export type ActionActivity = {
     textarea_attr_description: string;
 }
 
+export type SpellsInfo = {
+    attr_spell_attack?: string;
+    attr_spell_dc?: string;
+    checkbox_prepared_attr_spellcaster_prepared?: string;
+    checkbox_spontaneous_attr_spellcaster_spontaneous?: string;
+    attr_cantrips_per_day?: string; //is actually cantrip heightened level
+    spellcastingEntryInnateId?: string;
+    repeating_innate?: RepeatingSection<Spell>;
+    spellcastingEntryFocusId?: string;
+    repeating_focus?: RepeatingSection<Spell>;
+    repeating_cantrips?: RepeatingSection<Spell>;
+    spellcastingEntryPreparedId?: string;
+    repeating_normalspells?: RepeatingSection<Spell>;
+}
+
+export type Spell = {
+    attr_name: string;
+    attr_spelllevel: string;
+    attr_traits: string | null;
+    attr_domain: string | null;
+    select_attr_school: string;
+    attr_cast: string; //components
+    select_attr_cast_detail_label: string | null;
+    attr_cast_detail_information: string | null;
+    attr_range: string;
+    attr_target: string;
+    attr_area: string | null;
+    attr_duration: string;
+    select_attr_frequency: string | null;
+    attr_spellattack_custom: string | null;
+    attr_spellattack_misc: string | null;
+    attr_spellattack_other: string | null;
+    attr_damage_dice: string;
+    select_attr_damage_ability: string | null;
+    attr_damage_misc: string | null;
+    attr_damage_other: string | null;
+    attr_damage_type: string;
+    attr_damage_additional: string | null;
+    select_attr_npc_saving_throw_select: string;
+    select_attr_save_type: string;
+    attr_spelldc: string | null;
+    attr_spelldc_misc: string | null;
+    textarea_attr_save_critical_success: string | null;
+    textarea_attr_save_success: string | null;
+    textarea_attr_save_failure: string | null;
+    textarea_attr_save_critical_failure: string | null;
+    textarea_attr_description: string;
+    textarea_attr_heightened: string | null;
+}
+
 export type CreatureIndexData = {
     label: string;
     path: string;
 }
+
 
 export type PackIndexData = {
     label: string;
